@@ -1,0 +1,193 @@
+-- ADDING CALCULATIONS TO A QUERY
+--CALCULATIONS ARE CALCULATED AT TIME OF THE QUERY
+-- TWO TYPES OF CALCULATIONS: 1 TUPLE. 2: SET BASED EXAMPLE YTD CALCULATION. SUMMING UP A RANGE OF VALUES
+
+
+--MOST BASIC EXAMPLE
+WITH MEMBER [Measures].[My Measure] AS 
+	1+1
+
+SELECT {[Measures].[Reseller Sales Amount], [Measures].[My Measure]} ON 0
+
+FROM [Adventure Works];
+
+--MOST BASIC TEXT EXAMPLE
+WITH MEMBER [Measures].[My Measure] AS 
+	"BIGGIE FARTS MCGEESACT"
+
+SELECT {[Measures].[Reseller Sales Amount], [Measures].[My Measure]} ON 0
+
+FROM [Adventure Works];
+
+--ADDING TWO MEASURES TOGETHER
+WITH MEMBER [Measures].[My Measure] AS 
+	[Measures].[Reseller Freight Cost]/[Measures].[Reseller Order Quantity]
+
+SELECT {[Measures].[Reseller Sales Amount], [Measures].[My Measure]} ON 0
+
+FROM [Adventure Works];
+
+
+--MULTIPLE CALCULATIONS
+
+WITH MEMBER [Measures].[My Measure] AS 
+	[Measures].[Reseller Freight Cost]/[Measures].[Reseller Order Quantity]
+
+	MEMBER [Measures].[My SECOND Measure] AS
+
+	[Measures].[Reseller Sales Amount]/[Measures].[Reseller Order Quantity]
+
+SELECT {[Measures].[Reseller Sales Amount], [Measures].[My Measure],[Measures].[My SECOND Measure]} ON 0
+
+FROM [Adventure Works];
+
+
+--CREATING CALCULATED MEMBERS TO A HIERARCHY, WHY AREN'T WE SEEING IN THE RESULT SET
+
+WITH MEMBER [Product].[Category].[EVERYTHING OTHER THAN BIKES] AS
+	
+		[Product].[Category].&[4]+[Product].[Category].&[3]+[Product].[Category].&[2]
+
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+[Product].[Category].MEMBERS ON 1
+FROM [Adventure Works];
+
+--CREATING CALCULATED MEMBERS TO A HIERARCHY, WHY AREN'T WE SEEING IN THE RESULT SET, BECAUSE WE NEED TO USE THE ALLMEMBERS FUNCTION
+
+WITH MEMBER [Product].[Category].[EVERYTHING OTHER THAN BIKES] AS
+	
+		[Product].[Category].&[4]+[Product].[Category].&[3]+[Product].[Category].&[2]
+
+
+SELECT {[Measures].[Reseller Sales Amount],[Measures].[Reseller Order Quantity]} ON 0,
+
+[Product].[Category].ALLMEMBERS ON 1
+FROM [Adventure Works];
+
+
+--DIFFERENT CALCULATION
+
+
+WITH MEMBER [Product].[Category].[EVERYTHING OTHER THAN BIKES] AS
+	
+		[Product].[Category].&[4]+[Product].[Category].&[3]+[Product].[Category].&[2]
+
+
+SELECT {[Measures].[Reseller Sales Amount],[Measures].[Reseller Order Quantity],[Measures].[Internet Sales Amount]} ON 0,
+
+[Product].[SubCategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+
+--what percent of my total internet sales did each sub category contribute to? THIS WILL RETURN THE SAME VALUE, CURRENT MEMBER IS UNNECESSARY IN THE FIRST CALCULATION
+
+WITH MEMBER [Measures].[% of Total] AS
+	
+		([Measures].[Internet Sales Amount],[Product].[SubCategory].CURRENTMEMBER)
+
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[SubCategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+--correct calculation (THIS IS A TUPLE BASED CALCULATION), BECAUSE IT IS BASED ON COORDINATES
+WITH MEMBER [Measures].[% of Total] AS
+	
+		([Measures].[Internet Sales Amount]/
+		([Measures].[Internet Sales Amount], [Product].[Subcategory].[All Products])), FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[SubCategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+--GETTING PERCENT OF ALL SALES
+WITH MEMBER [Measures].[% of Total] AS
+	
+
+		([Measures].[Internet Sales Amount])/
+		([Measures].[Internet Sales Amount], [Product].[Subcategory].CURRENTMEMBER.PARENT)
+		, FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[SubCategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+--GETTING RID OF INFINITY VALUES WITH AN IF STATEMENT
+WITH MEMBER [Measures].[% of Total] AS
+	
+	IIF(
+		ISEMPTY(([Measures].[Internet Sales Amount], [Product].[Subcategory].CURRENTMEMBER.PARENT)),
+		NULL,
+		([Measures].[Internet Sales Amount])/
+		([Measures].[Internet Sales Amount], [Product].[Subcategory].CURRENTMEMBER.PARENT)
+		), FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[SubCategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+
+--SAME CALCULATION WITH A MULTILEVEL HIERARCHY
+
+WITH MEMBER [Measures].[% of Total] AS
+
+		([Measures].[Internet Sales Amount])/
+		([Measures].[Internet Sales Amount], [Product].[Product Categories].CURRENTMEMBER.PARENT)
+		, FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[Product Categories].MEMBERS ON 1
+FROM [Adventure Works];
+
+
+WITH MEMBER [Measures].[% of Total] AS
+
+		([Measures].[Internet Sales Amount])/
+		([Measures].[Internet Sales Amount], [Product].[Product Categories].CURRENTMEMBER.PARENT)
+		, FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+[Product].[Product Categories].[Subcategory].MEMBERS ON 1
+FROM [Adventure Works];
+
+
+--with crossjoining time periods
+WITH MEMBER [Measures].[% of Total] AS
+
+		([Measures].[Internet Sales Amount])/
+		([Measures].[Internet Sales Amount], [Product].[Product Categories].CURRENTMEMBER.PARENT)
+		, FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Internet Sales Amount],[Measures].[% of Total]} ON 0,
+
+([Product].[Product Categories].[Subcategory].MEMBERS,
+[Date].[Calendar].[Calendar Year]) ON 1
+FROM [Adventure Works];
+
+
+
+--NEW CALCULATIONS NESTING CALCULATIONS
+
+WITH MEMBER [Measures].[Profit] AS
+
+	[Measures].[Reseller Sales Amount]-[Measures].[Reseller Total Product Cost]
+
+	MEMBER [Measures].[Profit Margin] AS
+
+	[Measures].[Profit]/[Measures].[Reseller Sales Amount], FORMAT_STRING="PERCENT"
+
+SELECT {[Measures].[Reseller Sales Amount]
+	,[Measures].[Profit]
+	,[Measures].[Profit Margin]} ON 0,
+
+	([Product].[Product Categories].[Subcategory].MEMBERS,
+	[Date].[Calendar].[Calendar Year]) ON 1
+FROM [Adventure Works];
