@@ -1,0 +1,106 @@
+//MODULE 3C DEFINING SETS AND WORKING WITH HIERARCHIES
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[3].CHILDREN ON 1 
+
+FROM [Adventure Works];
+
+//PARENT
+//RETURNS THE PARENT OF THE CURRENT MEMBER
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[6].PARENT ON 1 
+
+FROM [Adventure Works];
+
+
+//ANCESTOR
+//SIMILAR TO PARENT, BUT RETURNS MEMBER ABOVE THE CURRENT MEMBER AT A SPECIFIED LEVEL. IE, WE CAN RETURN MEMBERS 2 OR 3 TIMES HIGHER
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ ANCESTOR([Date].[Calendar].[Month].&[2007]&[3],3) ON 1 
+
+FROM [Adventure Works];
+
+
+
+//CHILDREN
+//RETURNS A SET OF MEMBERS BELOW THE CURRENT MEMBER
+
+
+
+
+//DESCENDANTS
+//RETURNS A SET OF MEMBERS BELOW THE CURRENT MEMBER AT A SPECIFIED DISTANCE OR AT A SPECIFIC LEVEL IE. LIKE ANCESTOR, CAN DO DOWN SEVERAL LEVELS
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007],3
+	,SELF_AND_AFTER) ON 1 //SELF AND AFTER WILL BRING BACK EVERYTHING SPECIFIED PLUS EVERY LEVEL MEMBER BELOW
+
+FROM [Adventure Works];
+
+//OR SELF_AND_BEFORE
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ DESCENDANTS([Date].[Calendar].[Calendar Year].&[2007],3
+	,SELF_AND_BEFORE) ON 1 //SELF AND AFTER WILL BRING BACK EVERYTHING SPECIFIED PLUS EVERY LEVEL MEMBER BELOW
+
+FROM [Adventure Works];
+
+//SIBLINGS
+//THE NAVIGATES HORIZONTALLY
+//RETURNS A SET OF MEMBERS ON THE SAME LEVEL AND WITH THE SAME PARENT AS THE SPECIFIED MEMBER
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[3].SIBLINGS ON 1 //SIBLINGS IS ESSENTIALLY PARENT.CHILDREN BUNDLED IN TOGETHER
+
+FROM [Adventure Works];
+
+
+
+//OTHER: ANCESTORS, ASCENDANTS, COUSIN, FIRSTCHILD, FIRSTSIBLING, LASTCHILD, LASTSIBLING
+
+
+//LEAVES (GOOD FOR RIGID HIERARCHY) GOOD FOR EMPLOYEE HIERARCHIES
+
+WITH MEMBER [Measures].[Show Level Name] AS
+
+[Employee].[Employees].CURRENTMEMBER.LEVEL.NAME
+
+SELECT {[Measures].[Reseller Sales Amount]
+	,[Measures].[Show Level Name]} ON 0,
+
+DESCENDANTS([Employee].[Employees].[Employee Level 02]
+	, ,LEAVES ) ON 1
+
+FROM [Adventure Works];
+
+
+
+//FIRST AND LAST CHILD
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[3].FIRSTCHILD ON 1
+
+FROM [Adventure Works];
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[3].LASTCHILD ON 1
+
+FROM [Adventure Works];
+
+//OR FIRSTCHILD WITH NEXTMEMBER
+
+SELECT [Measures].[Reseller Sales Amount] ON 0,
+
+ [Date].[Calendar].[Month].&[2007]&[3].LASTCHILD.NEXTMEMBER ON 1
+
+FROM [Adventure Works];
