@@ -19,23 +19,23 @@ when Company M&S Singapore is chosen the other parameter should be limited to Re
 
 ## example code
 
-WITH 
-MEMBER [Measures].[ParameterCaption] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
-[City].[City Name].CURRENTMEMBER.MEMBER_CAPTION)
+    WITH 
+    MEMBER [Measures].[ParameterCaption] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
+    [City].[City Name].CURRENTMEMBER.MEMBER_CAPTION)
 
-MEMBER [Measures].[ParameterValue] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
-[City].[City Name].CURRENTMEMBER.UNIQUENAME)
+    MEMBER [Measures].[ParameterValue] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
+    [City].[City Name].CURRENTMEMBER.UNIQUENAME)
 
-MEMBER [Measures].[ParameterLevel] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
-[City].[City Name].CURRENTMEMBER.LEVEL.ORDINAL)
+    MEMBER [Measures].[ParameterLevel] AS iif(IsEmpty([Company].[Company Name].[Company Name]), null, 
+    [City].[City Name].CURRENTMEMBER.LEVEL.ORDINAL)
 
-SELECT { 
-[Measures].[ParameterCaption], 
-[Measures].[ParameterValue], 
-[Measures].[ParameterLevel]} ON COLUMNS ,
+    SELECT { 
+    [Measures].[ParameterCaption], 
+    [Measures].[ParameterValue], 
+    [Measures].[ParameterLevel]} ON COLUMNS ,
 
-NONEMPTY([City].[City Name].ALLMEMBERS,[Company].[Company Name])  ON ROWS
+    NONEMPTY([City].[City Name].ALLMEMBERS,[Company].[Company Name])  ON ROWS
 
-FROM ( SELECT ( STRTOSET(@CompanyCompanyName, CONSTRAINED))  ON COLUMNS
+    FROM ( SELECT ( STRTOSET(@CompanyCompanyName, CONSTRAINED))  ON COLUMNS
 
-FROM [Retail])
+    FROM [Retail])
