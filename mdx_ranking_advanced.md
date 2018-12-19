@@ -51,11 +51,11 @@ However normal rank function will only rank the org within the city and brand co
           order(
             crossjoin(orgselection,[Organization].[City State].currentmember.level.members,[Organization].[Brand Code].currentmember.level.members
                 )
-            ,[Measures].[Weekly vPlan Pct],asc
+            ,[Measures].[revenue],asc
           ),
 
 
-          [Measures].[Weekly vPlan Pct]
+          [Measures].[revenue]
         )
            select 
            {[Measures].[revenue rank]
